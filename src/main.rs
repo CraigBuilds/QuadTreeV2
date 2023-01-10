@@ -7,13 +7,14 @@ pub struct Entity {
     pub y: u16,
     pub width: u16,
     pub height: u16,
+    pub collision: bool,
 }
 
 fn main() {
     
     let mut model = vec![
-        Entity{x: 0, y: 0, width: 2, height: 2},
-        Entity{x: 1, y: 1, width: 2, height: 2},
+        Entity{x: 0, y: 0, width: 2, height: 2, collision: false},
+        Entity{x: 1, y: 1, width: 2, height: 2, collision: false},
     ];
 
     let mut tree = QuadTree::new(0,0,128,128); //128x128 world, 8x8 grid, so every leaf is 16x16
@@ -28,20 +29,13 @@ fn main() {
         }
 
         //calculate colisions
-        let mut indexes_to_remove = vec![];
         for entity in model.iter() {
             let leaf = tree.get_leaf_around(entity.x, entity.y).unwrap();
             for (_,_,other_entity) in leaf.vec.iter() {
                 if is_coliding(entity, other_entity) {
-                    let index = model.iter().position(|e| e as *const Entity == entity as *const Entity).unwrap();
-                    indexes_to_remove.push(index);
+                    entity.collision = true;
                 }
             }
-        }
-
-        //remove coliding entities
-        for index in indexes_to_remove {
-            model.remove(index);
         }
     }
 }
