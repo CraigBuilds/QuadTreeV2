@@ -10,7 +10,7 @@ fn divide_into_4(rect_x: u16, rect_y: u16, rect_w: u16, rect_h: u16) -> [(u16, u
 }
 
 /// 4 quadrants, each containing 4 quadrants, each containing 4 Leafs (8x8 grid, see README.md)
-pub type QuadTree<'a, T> = [[[QuadTreeLeaf<'a, T>; 4]; 4]; 4];
+pub type QuadTree<'a, DataT> = [[[QuadTreeLeaf<'a, DataT>; 4]; 4]; 4];
 
 /// 4 quadrants, each containing 4 quadrants, each containing 4 quadrants, each containing 4 Leafs (16x16 grid)
 //pub type DeepQuadTree<'a> = [[[[QuadTreeLeaf<'a>; 4]; 4]; 4]; 4];
@@ -37,16 +37,16 @@ pub trait Quadrants<'a>{
 }
 
 /// An array of 4 Quadrants also implements Quadrants
-impl<'a, T> Quadrants<'a> for [T; 4] where T: Quadrants<'a> {
-    type DataT = T::DataT;
+impl<'a, InnerQuadrants> Quadrants<'a> for [InnerQuadrants; 4] where InnerQuadrants: Quadrants<'a> {
+    type DataT = InnerQuadrants::DataT;
     ///Construct 4 empty quadrants, each containing other quadrants
     fn new(rect_x: u16, rect_y: u16, rect_w: u16, rect_h: u16) -> Self {
         let rects = divide_into_4(rect_x, rect_y, rect_w, rect_h);
         [
-            T::new(rects[0].0, rects[0].1, rects[0].2, rects[0].3),
-            T::new(rects[1].0, rects[1].1, rects[1].2, rects[1].3),
-            T::new(rects[2].0, rects[2].1, rects[2].2, rects[2].3),
-            T::new(rects[3].0, rects[3].1, rects[3].2, rects[3].3)
+            InnerQuadrants::new(rects[0].0, rects[0].1, rects[0].2, rects[0].3),
+            InnerQuadrants::new(rects[1].0, rects[1].1, rects[1].2, rects[1].3),
+            InnerQuadrants::new(rects[2].0, rects[2].1, rects[2].2, rects[2].3),
+            InnerQuadrants::new(rects[3].0, rects[3].1, rects[3].2, rects[3].3)
         ]
     }
     fn clear(&mut self) {
@@ -75,10 +75,10 @@ impl<'a, T> Quadrants<'a> for [T; 4] where T: Quadrants<'a> {
         }
         None
     }
-    const DEPTH: usize = T::DEPTH + 1;
+    const DEPTH: usize = InnerQuadrants::DEPTH + 1;
 }
 
-///QuadTreeLeaf cannot implement Quadrants, because the [T; 4] impl would conflict with the [QuadTreeLeaf<DataT>; 4] impl
+///QuadTreeLeaf cannot implement Quadrants, because the generic [InnerQuadrants; 4] impl would conflict with the [QuadTreeLeaf<DataT>; 4] impl
 // impl<DataT> !Quadrants<DataT> for QuadTreeLeaf<DataT> {}
 
 /// An array of 4 QuadTreeLeafs implements Quadrants
