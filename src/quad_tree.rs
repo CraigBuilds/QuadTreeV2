@@ -10,35 +10,35 @@ fn divide_into_4(rect_x: u16, rect_y: u16, rect_w: u16, rect_h: u16) -> [(u16, u
 }
 
 /// 4 quadrants, each containing 4 quadrants, each containing 4 Leafs (8x8 grid, see README.md)
-pub type QuadTree<'a> = [[[QuadTreeLeaf<'a>; 4]; 4]; 4];
+pub type QuadTree<'a, T> = [[[QuadTreeLeaf<'a, T>; 4]; 4]; 4];
 
 /// 4 quadrants, each containing 4 quadrants, each containing 4 quadrants, each containing 4 Leafs (16x16 grid)
 //pub type DeepQuadTree<'a> = [[[[QuadTreeLeaf<'a>; 4]; 4]; 4]; 4];
 
 /// Leaf of the QuadTree
-pub struct QuadTreeLeaf<'a> {
-    pub vec: Vec<(&'a u16, &'a u16)>,
+pub struct QuadTreeLeaf<'a, DataT> {
+    pub vec: Vec<(u16, u16, &'a DataT)>,
     rect_x: u16, rect_y: u16, rect_w: u16, rect_h: u16,
 }
 
 /// Trait for an array of 4 QuadTreeLeaves or 4 other Quadrants
-pub trait Quadrants<'a> {
-    type InnerType;
+pub trait Quadrants<'a>{
+    type DataT;
     ///Construct 4 empty quadrants, each containing other quadrants, or a leaf
     fn new(rect_x: u16, rect_y: u16, rect_w: u16, rect_h: u16) -> Self;
     ///Remove all points from all leaves
     fn clear(&mut self);
     /// Insert a point into the correct leaf, or return false if it doesn't fit
-    fn insert(&mut self, x: &'a u16, y: &'a u16) -> bool;
+    fn insert(&mut self, x: u16, y: u16, data: &'a Self::DataT) -> bool;
     /// Return a reference to the leaf that contains the point
-    fn get_leaf_around(&self, x: &'a u16, y: &'a u16) -> Option<&QuadTreeLeaf>;
+    fn get_leaf_around(&self, x: u16, y: u16) -> Option<&QuadTreeLeaf<Self::DataT>>;
     //used for debugging
     const DEPTH: usize;
 }
 
 /// An array of 4 Quadrants also implements Quadrants
 impl<'a, T> Quadrants<'a> for [T; 4] where T: Quadrants<'a> {
-    type InnerType = T;
+    type DataT = T::DataT;
     ///Construct 4 empty quadrants, each containing other quadrants
     fn new(rect_x: u16, rect_y: u16, rect_w: u16, rect_h: u16) -> Self {
         let rects = divide_into_4(rect_x, rect_y, rect_w, rect_h);
@@ -54,18 +54,18 @@ impl<'a, T> Quadrants<'a> for [T; 4] where T: Quadrants<'a> {
             quadrant_or_leaf.clear();
         }
     }
-    fn insert(&mut self, x: &'a u16, y: &'a u16) -> bool {
+    fn insert(&mut self, x: u16, y: u16, data: &'a Self::DataT) -> bool {
         for quadrant_or_leaf in self.iter_mut() {
             //this will recurse down the tree until it finds a leaf
             //short circuit if we find a leaf that accepts the point
-            if quadrant_or_leaf.insert(x, y) {
+            if quadrant_or_leaf.insert(x, y, data) {
                 return true;
             }
         }
         false
     }
     /// Return a reference to the vector of points in the leaf that contains the point
-    fn get_leaf_around(&self, x: &'a u16, y: &'a u16) -> Option<&QuadTreeLeaf> {
+    fn get_leaf_around(&self, x: u16, y: u16) -> Option<&QuadTreeLeaf<Self::DataT>> {
         for quadrant_or_leaf in self.iter() {
             //this will recurse down the tree until it finds a leaf
             //short circuit if we find a leaf that could contain the point
@@ -78,9 +78,12 @@ impl<'a, T> Quadrants<'a> for [T; 4] where T: Quadrants<'a> {
     const DEPTH: usize = T::DEPTH + 1;
 }
 
+///QuadTreeLeaf cannot implement Quadrants, because the [T; 4] impl would conflict with the [QuadTreeLeaf<DataT>; 4] impl
+// impl<DataT> !Quadrants<DataT> for QuadTreeLeaf<DataT> {}
+
 /// An array of 4 QuadTreeLeafs implements Quadrants
-impl<'a> Quadrants<'a> for [QuadTreeLeaf<'a>; 4] {
-    type InnerType = QuadTreeLeaf<'a>;
+impl<'a, DataT> Quadrants<'a> for [QuadTreeLeaf<'a, DataT>; 4] {
+    type DataT = DataT;
     ///Construct 4 empty leaves
     fn new(rect_x: u16, rect_y: u16, rect_w: u16, rect_h: u16) -> Self {
         let rects = divide_into_4(rect_x, rect_y, rect_w, rect_h);
@@ -96,17 +99,17 @@ impl<'a> Quadrants<'a> for [QuadTreeLeaf<'a>; 4] {
             leaf.clear();
         }
     }
-    fn insert(&mut self, x: &'a u16, y: &'a u16) -> bool {
+    fn insert(&mut self, x: u16, y: u16, data: &'a DataT) -> bool {
         for leaf in self.iter_mut() {
             //short circuit if we find a leaf that accepts the point
-            if leaf.insert(x, y) {
+            if leaf.insert(x, y, data) {
                 return true;
             }
         }
         false
     }
     /// Return a reference to the vector of points in the leaf that contains the point
-    fn get_leaf_around(&self, x: &'a u16, y: &'a u16) -> Option<&QuadTreeLeaf> {
+    fn get_leaf_around(&self, x: u16, y: u16) -> Option<&QuadTreeLeaf<DataT>> {
         for leaf in self.iter() {
             //short circuit if we find a leaf that could contain the point
             if leaf.valid_point(x, y) {
@@ -119,24 +122,22 @@ impl<'a> Quadrants<'a> for [QuadTreeLeaf<'a>; 4] {
 }
 
 /// A QuadTree leaf with a constructor and a method to insert a point
-impl<'a> QuadTreeLeaf<'a> {
+impl<'a, DataT> QuadTreeLeaf<'a, DataT> {
     fn new(rect_x: u16, rect_y: u16, rect_w: u16, rect_h: u16) -> Self {
         QuadTreeLeaf {vec: Vec::new(), rect_x, rect_y, rect_w, rect_h}
     }
     fn clear(&mut self) {
         self.vec.clear();
     }
-    fn insert(&mut self, x: &'a u16, y: &'a u16) -> bool {
+    fn insert(&mut self, x: u16, y: u16, data: &'a DataT) -> bool {
         if self.valid_point(x, y) {
-            self.vec.push((x, y));
+            self.vec.push((x, y, data));
             true
         } else {
             false
         }
     }
-    fn valid_point(&self, px: &'a u16, py: &'a u16) -> bool {
-        let px = *px;
-        let py = *py;
+    fn valid_point(&self, px: u16, py: u16) -> bool {
         px >= self.rect_x && px <= self.rect_x + self.rect_w && py >= self.rect_y && py <= self.rect_y + self.rect_h
     }
 }
