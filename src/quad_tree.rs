@@ -32,6 +32,8 @@ pub trait Quadrants<'a>{
     fn insert(&mut self, x: u16, y: u16, data: &'a Self::DataT) -> bool;
     /// Return a reference to the leaf that contains the point
     fn get_leaf_around(&self, x: u16, y: u16) -> Option<&QuadTreeLeaf<Self::DataT>>;
+    ///Get all data in all leaves
+    fn all(&self) -> Vec<&'a Self::DataT>;
     //used for debugging
     const DEPTH: usize;
 }
@@ -74,6 +76,14 @@ impl<'a, InnerQuadrants> Quadrants<'a> for [InnerQuadrants; 4] where InnerQuadra
             }
         }
         None
+    }
+    ///Get all data in all leaves
+    fn all(&self) -> Vec<&'a Self::DataT> {
+        let mut vec = Vec::new();
+        for quadrant_or_leaf in self.iter() {
+            vec.extend(quadrant_or_leaf.all());
+        }
+        vec
     }
     const DEPTH: usize = InnerQuadrants::DEPTH + 1;
 }
@@ -118,6 +128,14 @@ impl<'a, DataT> Quadrants<'a> for [QuadTreeLeaf<'a, DataT>; 4] {
         }
         None
     }
+    ///Get all data in all leaves
+    fn all(&self) -> Vec<&'a Self::DataT> {
+        let mut vec = Vec::new();
+        for leaf in self.iter() {
+            vec.extend(leaf.all());
+        }
+        vec
+    }
     const DEPTH: usize = 1;
 }
 
@@ -139,5 +157,12 @@ impl<'a, DataT> QuadTreeLeaf<'a, DataT> {
     }
     fn valid_point(&self, px: u16, py: u16) -> bool {
         px >= self.rect_x && px <= self.rect_x + self.rect_w && py >= self.rect_y && py <= self.rect_y + self.rect_h
+    }
+    fn all(&self) -> Vec<&'a DataT> {
+        let mut result = Vec::new();
+        for (_, _, data) in self.vec.iter() {
+            result.push(*data);
+        }
+        result
     }
 }
