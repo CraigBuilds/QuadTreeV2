@@ -1,4 +1,3 @@
-//todo move the new function out of the trait and make it a const fn
 fn divide_into_4(rect_x: u16, rect_y: u16, rect_w: u16, rect_h: u16) -> [(u16, u16, u16, u16); 4] {
     let half_w = rect_w / 2;
     let half_h = rect_h / 2;
