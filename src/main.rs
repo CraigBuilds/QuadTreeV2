@@ -29,7 +29,7 @@ fn main() {
         }
 
         //calculate colisions
-        for entity in model.iter() {
+        for entity in model.iter_mut() {
             let leaf = tree.get_leaf_around(entity.x, entity.y).unwrap();
             for (_,_,other_entity) in leaf.vec.iter() {
                 if is_coliding(entity, other_entity) {
