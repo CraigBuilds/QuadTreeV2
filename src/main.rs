@@ -24,12 +24,11 @@ fn main() {
         //rebuild the tree
         tree.clear();
         for entity in &mut model {
-            //insert a reference to the entity into the tree
+            //I don't know why unsafe is needed here, but it is
             let ptr = entity as *mut Entity;
-            //I don't know why this works, but it does
-            unsafe {
-                tree.insert(entity.x, entity.y, &mut *ptr);
-            }
+            let entity = unsafe { &mut *ptr };
+            //insert a reference to the entity into the tree
+            tree.insert(entity.x, entity.y, entity);
         }
 
         for leaf in into_iter(&mut tree) {
