@@ -17,11 +17,12 @@ fn main() {
         Entity{x: 1, y: 1, width: 2, height: 2, collision: false},
     ];
 
+    let mut tree = QuadTree::new(0,0,128,128); //128x128 world, 8x8 grid, so every leaf is 16x16
+
     loop {
 
         //rebuild the tree
-        let mut tree = QuadTree::new(0,0,128,128); //128x128 world, 8x8 grid, so every leaf is 16x16
-
+        tree.clear();
         for entity in model.iter_mut() {
             //insert a reference to the entity into the tree
             tree.insert(entity.x, entity.y, entity);
