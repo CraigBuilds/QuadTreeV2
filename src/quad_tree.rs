@@ -17,7 +17,8 @@ pub type QuadTree<DataT> = [[[QuadTreeLeaf<DataT>; 4]; 4]; 4];
 
 /// Leaf of the QuadTree
 pub struct QuadTreeLeaf<DataT> {
-    pub vec: Vec<(u16, u16, DataT)>,
+    pub data: Vec<DataT>,
+    positions: Vec<(u16, u16)>,
     rect_x: u16, rect_y: u16, rect_w: u16, rect_h: u16,
 }
 
@@ -164,17 +165,19 @@ impl<DataT> Quadrants for [QuadTreeLeaf<DataT>; 4] {
 /// A QuadTree leaf with a constructor and a method to insert a point
 impl<DataT> QuadTreeLeaf<DataT> {
     fn new(rect_x: u16, rect_y: u16, rect_w: u16, rect_h: u16) -> Self {
-        QuadTreeLeaf {vec: Vec::new(), rect_x, rect_y, rect_w, rect_h}
+        QuadTreeLeaf {data: Vec::new(), positions: Vec::new(), rect_x, rect_y, rect_w, rect_h}
     }
     fn clear(&mut self) {
-        self.vec.clear();
+        self.data.clear();
+        self.positions.clear();
     }
     fn can_insert(&self, x: u16, y: u16) -> bool {
         x >= self.rect_x && x <= self.rect_x + self.rect_w && y >= self.rect_y && y <= self.rect_y + self.rect_h
     }
     fn insert(&mut self, x: u16, y: u16, data: DataT) -> bool {
         if self.can_insert(x, y) {
-            self.vec.push((x, y, data));
+            self.data.push(data);
+            self.positions.push((x, y));
             true
         } else {
             false
@@ -183,13 +186,13 @@ impl<DataT> QuadTreeLeaf<DataT> {
 }
 
 pub struct LeafIterator<'a, DataT> {
-    ptr: &'a mut QuadTree<DataT>,
+    ptr: &'a QuadTree<DataT>,
     index: (usize, usize, usize), //3 levels of depth
 }
 
-/// An Iterator that yields leaf in the tree
+/// An Iterator that yields each leaf (vector of data) in the tree
 impl<'a, DataT> Iterator for LeafIterator<'a, DataT> {
-    type Item = &'a mut QuadTreeLeaf<DataT>;
+    type Item = &'a Vec<DataT>;
 
     /// Starts at (0,0,0) and ends at (3, 3, 3)
     /// It increases the index by 1 each time, and if it reaches the end of the quad, it moves to the next quad
@@ -199,12 +202,8 @@ impl<'a, DataT> Iterator for LeafIterator<'a, DataT> {
             if j < 4 {
                 if k < 4 {
                     self.index.2 += 1;
-                    let ptr = &mut self.ptr[i][j][k] as *mut QuadTreeLeaf<DataT>;
-                    //safety: subsequent calls to next() will not access the same memory
-                    //https://stackoverflow.com/a/63438431/3052832
-                    unsafe {
-                        Some(&mut *ptr)
-                    }
+                    let dataptr = & self.ptr[i][j][k].data as *const Vec<DataT>;
+                    unsafe {Some(& *dataptr)}
                 } else {
                     self.index.2 = 0;
                     self.index.1 += 1;
@@ -221,6 +220,6 @@ impl<'a, DataT> Iterator for LeafIterator<'a, DataT> {
     }
 }
 
-pub fn into_iter<DataT>(quad_tree: &mut QuadTree<DataT>) -> LeafIterator<DataT> {
+pub fn into_iter<DataT>(quad_tree: &QuadTree<DataT>) -> LeafIterator<DataT> {
     LeafIterator {ptr: quad_tree, index: (0, 0, 0)}
 }

@@ -1,7 +1,7 @@
 mod quad_tree;
 use quad_tree::*;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug)]
 pub struct Entity {
     pub x: u16,
     pub y: u16,
@@ -25,30 +25,26 @@ fn main() {
 
         //rebuild the tree
         tree.clear();
-        for entity in &mut model {
-            //safety: we can put a pointer in the tree because the address of the entity will not change
-            //during this iteration of the _main loop. The entity is not moved, and the tree is cleared
-            let entity = unsafe {
-                let ptr = entity as *mut Entity;
-                &mut *ptr
-            };
+        for i in 0..model.len() {
+            let entity = &mut model[i] as *mut Entity;
+            let entity = unsafe {&mut *entity};
             //insert a reference to the entity into the tree
             tree.insert(entity.x, entity.y, entity);
         }
 
-        for leaf in into_iter(&mut tree) {
-            for i in 0..leaf.vec.len() {
-                let ((_,_,entity), leading, trailing) = split_at_rest_mut(&mut leaf.vec, i);
-                for (_,_,other_entity) in chain_others(leading, trailing) {
-                    if is_coliding(entity, other_entity) {
-                        println!("{:?} is colliding with {:?}", entity, other_entity);
-                        entity.collision = true;
-                    }
-                }
+        for local_model in into_iter(&tree) {
+            for i in 0..local_model.len() {
+                let (entity, leading, trailing) = split_at_rest(local_model, i);
+                let others = chain_others(leading, trailing);
+                update_entity(entity, others);
             }
         }
         println!("");
     }
+}
+
+fn update_entity<'a>(_entity: &&mut Entity, _local_model: impl Iterator<Item = &'a &'a mut Entity>) {
+
 }
 
 fn is_coliding(entity: &Entity, other_entity: &Entity) -> bool {
@@ -65,6 +61,18 @@ pub fn split_at_rest_mut<T>(x: &mut [T], index: usize) -> (&mut T, &mut [T], &mu
     (val, leading, trailing)
 }
 
-pub fn chain_others<'a, T>(leading: &'a mut [T], trailing: &'a mut [T]) -> impl Iterator<Item = &'a mut T> {
+pub fn split_at_rest<T>(x: & [T], index: usize) -> (& T, & [T], & [T]) {
+    debug_assert!(index < x.len());
+    let (leading, trailing) = x.split_at(index); //TODO unchecked version?
+    let (val, trailing) = trailing.split_first().unwrap();
+    (val, leading, trailing)
+}
+
+
+pub fn chain_others_mut<'a, T>(leading: &'a mut [T], trailing: &'a mut [T]) -> impl Iterator<Item = &'a mut T> {
     leading.iter_mut().chain(trailing.iter_mut())
+}
+
+pub fn chain_others<'a, T>(leading: &'a [T], trailing: &'a [T]) -> impl Iterator<Item = &'a T> {
+    leading.iter().chain(trailing.iter())
 }
