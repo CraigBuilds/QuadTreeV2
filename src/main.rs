@@ -15,18 +15,23 @@ fn main() {
     let mut model = vec![
         Entity{x: 0, y: 0, width: 2, height: 2, collision: false},
         Entity{x: 1, y: 1, width: 2, height: 2, collision: false},
+        Entity{x: 20, y: 20, width: 2, height: 2, collision: false},
+        Entity{x: 21, y: 21, width: 2, height: 2, collision: false},
     ];
 
     let mut tree = QuadTree::new(0,0,128,128); //128x128 world, 8x8 grid, so every leaf is 16x16
 
-    loop {
+    '_main: loop {
 
         //rebuild the tree
         tree.clear();
         for entity in &mut model {
-            //I don't know why unsafe is needed here, but it is
-            let ptr = entity as *mut Entity;
-            let entity = unsafe { &mut *ptr };
+            //safety: we can put a pointer in the tree because the address of the entity will not change
+            //during this iteration of the _main loop. The entity is not moved, and the tree is cleared
+            let entity = unsafe {
+                let ptr = entity as *mut Entity;
+                &mut *ptr
+            };
             //insert a reference to the entity into the tree
             tree.insert(entity.x, entity.y, entity);
         }
@@ -36,11 +41,13 @@ fn main() {
                 let ((_,_,entity), leading, trailing) = split_at_rest_mut(&mut leaf.vec, i);
                 for (_,_,other_entity) in chain_others(leading, trailing) {
                     if is_coliding(entity, other_entity) {
+                        println!("{:?} is colliding with {:?}", entity, other_entity);
                         entity.collision = true;
                     }
                 }
             }
         }
+        println!("");
     }
 }
 
