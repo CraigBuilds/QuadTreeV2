@@ -23,7 +23,7 @@ fn main() {
 
         //rebuild the tree
         tree.clear();
-        for entity in model.iter_mut() {
+        for entity in &mut model {
             //insert a reference to the entity into the tree
             let ptr = entity as *mut Entity;
             //I don't know why this works, but it does
