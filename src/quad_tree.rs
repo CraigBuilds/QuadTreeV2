@@ -200,6 +200,7 @@ impl<'a, DataT> Iterator for LeafIterator<'a, DataT> {
                 if k < 4 {
                     self.index.2 += 1;
                     let ptr = &mut self.ptr[i][j][k] as *mut QuadTreeLeaf<DataT>;
+                    //https://stackoverflow.com/a/63438431/3052832
                     unsafe {
                         Some(&mut *ptr)
                     }
