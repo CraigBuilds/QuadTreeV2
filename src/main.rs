@@ -25,7 +25,11 @@ fn main() {
         tree.clear();
         for entity in model.iter_mut() {
             //insert a reference to the entity into the tree
-            tree.insert(entity.x, entity.y, entity);
+            let ptr = entity as *mut Entity;
+            //I don't know why this works, but it does
+            unsafe {
+                tree.insert(entity.x, entity.y, &mut *ptr);
+            }
         }
 
         for leaf in into_iter(&mut tree) {
