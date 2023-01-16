@@ -197,7 +197,8 @@ impl<DataT> Quadrants for [QuadTreeLeaf<DataT>; 4] {
         }
         None
     }
-    const DEPTH: usize = 0;
+    //This is a Quadrant of 4 leaves, so the depth is 1
+    const DEPTH: usize = 1;
 }
 
 /// A QuadTree leaf with a constructor and a method to insert a point
