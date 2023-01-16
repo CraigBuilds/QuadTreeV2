@@ -111,7 +111,8 @@ fn bench_enum_tree_no_cache(c: &mut Criterion) {
 
 criterion_group!(
     name = benches;
-    config = Criterion::default();
+    config = Criterion::default()
+        .sample_size(200);
     targets = bench_no_broad_phase, bench_fixed_depth_tree, bench_enum_tree, bench_fixed_depth_tree_no_cache, bench_enum_tree_no_cache
 );
 
