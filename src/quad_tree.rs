@@ -226,16 +226,20 @@ impl<DataT> QuadTreeLeaf<DataT> {
 
 use super::GetX;
 use super::GetY;
+
 pub fn rebuild_from_model<Entity: GetX+GetY>(tree: &mut QuadTree<&mut Entity>, model: &mut Vec<Entity>) {
     tree.clear();
     for i in 0..model.len() {
         let entity = &mut model[i] as *mut Entity;
+        //// SAFETY: This is safe because the tree is cleared before being filled.
         let entity = unsafe {&mut *entity};
         //insert a reference to the entity into the tree
         tree.insert(entity.get_x(), entity.get_y(), entity);
     }
 }
 
+/// Empty tree must come from parent scope so borrow checker knows it has the same lifetime as the model
+// If the tree is not empty, it could end up containing multiple mutable references to the same entity
 pub unsafe fn build_from_model<Entity: GetX+GetY>(empty_tree: &mut QuadTree<&mut Entity>, model: &mut Vec<Entity>) {
     for i in 0..model.len() {
         let entity = &mut model[i] as *mut Entity;
@@ -245,7 +249,7 @@ pub unsafe fn build_from_model<Entity: GetX+GetY>(empty_tree: &mut QuadTree<&mut
     }
 }
 
-// A version that returns a QuadTree that owns clones of the entities
+/// A version that returns a QuadTree that owns clones of the entities
 pub fn build_owned_from_model<Entity: GetX+GetY+Clone>(model: &mut Vec<Entity>) -> QuadTree<Entity> {
     let mut tree = QuadTree::new_empty(0, 0, 1000, 1000);
     for i in 0..model.len() {

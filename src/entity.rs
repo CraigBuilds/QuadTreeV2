@@ -64,6 +64,10 @@ pub fn update_entity_local(entity: &mut Entity, local_model: &mut [&mut Entity])
 #[allow(dead_code)]
 pub fn update_entity_global(entity: &mut Entity, model: &mut [Entity]) {
     for other_entity in model {
+        //skip self checks
+        if entity as *const Entity == other_entity as *const Entity {
+            continue;
+        }
         if is_coliding(entity, other_entity) {
             entity.collision = true;
         }

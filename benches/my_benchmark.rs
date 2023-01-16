@@ -15,6 +15,7 @@ fn no_broad_phase_main(model: &mut Vec<Entity>) {
 
     //update the entities
     for i in 0..model.len() {
+        ////SAFETY This is safe because update_entity_global checks if the entity is the same as the other_entity
         let entity = unsafe {&mut *(&mut model[i] as *mut Entity)};
         update_entity_global(entity, model);
     }
@@ -36,6 +37,7 @@ fn static_tree_main(model: &mut Vec<Entity>, tree: &mut QuadTree<&mut Entity>) {
 fn static_tree_no_cache_main(model: &mut Vec<Entity>) {
     
     let mut tree = QuadTree::new_empty(0, 0, 128, 128);
+    ////SAFETY This is safe because the tree is empty
     unsafe { build_from_model(&mut tree, model) };
 
     //update the entities
@@ -61,6 +63,7 @@ fn enum_tree_main(model: &mut Vec<Entity>, tree: &mut EnumQuadTree<&mut Entity>)
 fn enum_tree_no_cache_main(model: &mut Vec<Entity>) {
     
     let mut tree = EnumQuadTree::new_empty(0, 0, 128, 128, 3);
+    ////SAFETY This is safe because the tree is empty
     unsafe{ build_from_model_enum(&mut tree, model) };
 
     //update the entities
