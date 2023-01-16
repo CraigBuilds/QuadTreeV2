@@ -42,7 +42,8 @@ pub trait Quadrants{
     const DEPTH: usize;
 }
 
-/// An array of 4 Quadrants also implements Quadrants
+/// An array of 4 Quadrants also implements Quadrants.
+/// Each depth of the tree is a different type so we use a recursive impl to implement each depth.
 impl<InnerQuadrants> Quadrants for [InnerQuadrants; 4] where InnerQuadrants: Quadrants {
     type DataT = InnerQuadrants::DataT;
     ///Construct 4 empty quadrants, each containing other quadrants
@@ -71,6 +72,7 @@ impl<InnerQuadrants> Quadrants for [InnerQuadrants; 4] where InnerQuadrants: Qua
         false
     }
     fn insert(&mut self, x: u16, y: u16, data: Self::DataT) -> bool {
+        //unroll the top level for loop to show borrow checker insert is only called once
         if self[0].can_insert(x, y) {
             self[0].insert(x, y, data);
             return true;
@@ -115,10 +117,8 @@ impl<InnerQuadrants> Quadrants for [InnerQuadrants; 4] where InnerQuadrants: Qua
     const DEPTH: usize = InnerQuadrants::DEPTH + 1;
 }
 
-///QuadTreeLeaf cannot implement Quadrants, because the generic [InnerQuadrants; 4] impl would conflict with the [QuadTreeLeaf<DataT>; 4] impl
-// impl<DataT> !Quadrants<DataT> for QuadTreeLeaf<DataT> {}
-
-/// An array of 4 QuadTreeLeafs implements Quadrants
+/// An array of 4 QuadTreeLeafs implements Quadrants.
+/// This is the bottom of the recursive impl chain, it interacts with the leaf instead of another quadrant.
 impl<DataT> Quadrants for [QuadTreeLeaf<DataT>; 4] {
     type DataT = DataT;
     ///Construct 4 empty leaves
@@ -146,6 +146,7 @@ impl<DataT> Quadrants for [QuadTreeLeaf<DataT>; 4] {
         false
     }
     fn insert(&mut self, x: u16, y: u16, data: Self::DataT) -> bool {
+        //unroll the top level for loop to show borrow checker insert is only called once
         if self[0].can_insert(x, y) {
             self[0].insert(x, y, data);
             return true;
