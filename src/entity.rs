@@ -51,10 +51,13 @@ impl GetY for Entity {
     }
 }
 
-//TODO: More things than just collision checks. How does the QuadTree performance scale as the complexity of the update function increases?
+fn self_check(entity: &Entity, other_entity: &Entity) -> bool {
+    entity as *const Entity == other_entity as *const Entity
+}
 
 pub fn update_entity_local(entity: &mut Entity, local_model: &mut [&mut Entity]) {
     for other_entity in local_model {
+        if self_check(entity, other_entity) {continue}
         if is_coliding(entity, other_entity) {
             entity.collision = true;
         }
@@ -64,10 +67,7 @@ pub fn update_entity_local(entity: &mut Entity, local_model: &mut [&mut Entity])
 #[allow(dead_code)]
 pub fn update_entity_global(entity: &mut Entity, model: &mut [Entity]) {
     for other_entity in model {
-        //skip self checks
-        if entity as *const Entity == other_entity as *const Entity {
-            continue;
-        }
+        if self_check(entity, other_entity) {continue}
         if is_coliding(entity, other_entity) {
             entity.collision = true;
         }
