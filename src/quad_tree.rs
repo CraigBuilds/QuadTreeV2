@@ -1,15 +1,3 @@
-///Split a rect into 4 quadrants. This is a utility function used by the QuadTree constructor
-fn divide_into_4(rect_x: u16, rect_y: u16, rect_w: u16, rect_h: u16) -> [(u16, u16, u16, u16); 4] {
-    let half_w = rect_w / 2;
-    let half_h = rect_h / 2;
-    [
-        (rect_x, rect_y, half_w, half_h),
-        (rect_x + half_w, rect_y, half_w, half_h),
-        (rect_x, rect_y + half_h, half_w, half_h),
-        (rect_x + half_w, rect_y + half_h, half_w, half_h)
-    ]
-}
-
 /// 4 quadrants, each containing 4 quadrants, each containing 4 Leafs (8x8 grid, see README.md)
 pub type QuadTree<DataT> = [[[QuadTreeLeaf<DataT>; 4]; 4]; 4];
 
@@ -48,6 +36,18 @@ pub trait Quadrants{
     }
     // Used for debugging
     const DEPTH: usize;
+}
+
+///Split a rect into 4 quadrants. This is a utility function used by the QuadTree constructor
+fn divide_into_4(rect_x: u16, rect_y: u16, rect_w: u16, rect_h: u16) -> [(u16, u16, u16, u16); 4] {
+    let half_w = rect_w / 2;
+    let half_h = rect_h / 2;
+    [
+        (rect_x, rect_y, half_w, half_h),
+        (rect_x + half_w, rect_y, half_w, half_h),
+        (rect_x, rect_y + half_h, half_w, half_h),
+        (rect_x + half_w, rect_y + half_h, half_w, half_h)
+    ]
 }
 
 /// An array of 4 Quadrants also implements Quadrants.
@@ -218,9 +218,8 @@ impl<DataT> QuadTreeLeaf<DataT> {
         }
     }
 }
-
-pub trait GetX {fn get_x(&self) -> u16;}
-pub trait GetY {fn get_y(&self) -> u16;}
+use super::GetX;
+use super::GetY;
 pub fn rebuild_tree<Entity: GetX+GetY>(tree: &mut QuadTree<&mut Entity>, model: &mut Vec<Entity>) {
     tree.clear();
     for i in 0..model.len() {
