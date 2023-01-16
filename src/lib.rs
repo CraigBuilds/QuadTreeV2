@@ -13,12 +13,12 @@ pub fn example_main() {
     use quad_tree::*;
 
     let mut model = init_model(Default::default());
-    let mut tree = QuadTree::new(0,0,128,128); //128x128 world, 8x8 grid, so every leaf is 16x16
+    let mut tree = QuadTree::new_empty(0,0,128,128); //128x128 world, 8x8 grid, so every leaf is 16x16
 
     //the main game loop
     loop {
 
-        rebuild_tree(&mut tree, &mut model);
+        rebuild_from_model(&mut tree, &mut model);
 
         //update the entities
         for entity in model.iter_mut() {
@@ -33,12 +33,12 @@ pub fn example_main_2() {
     use enum_quadtree::*;
 
     let mut model = init_model(Default::default());
-    let mut tree = QuadTree::new(0,0,128,128, 3); //128x128 world, 8x8 grid, so every leaf is 16x16
+    let mut tree = QuadTree::new_empty(0,0,128,128, 3); //128x128 world, 8x8 grid, so every leaf is 16x16
 
     //the main game loop
     loop {
 
-        rebuild_tree(&mut tree, &mut model);
+        rebuild_from_model(&mut tree, &mut model);
 
         //update the entities
         for entity in model.iter_mut() {

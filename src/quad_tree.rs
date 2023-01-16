@@ -19,7 +19,7 @@ pub struct QuadTreeLeaf<DataT> {
 pub trait Quadrants{
     type DataT;
     /// Construct 4 empty quadrants, each containing other quadrants, or a leaf
-    fn new(rect_x: u16, rect_y: u16, rect_w: u16, rect_h: u16) -> Self;
+    fn new_empty(rect_x: u16, rect_y: u16, rect_w: u16, rect_h: u16) -> Self;
     /// Remove all points from all leaves
     fn clear(&mut self);
     /// Insert a point into the correct leaf, or return false if it doesn't fit
@@ -59,13 +59,13 @@ fn divide_into_4(rect_x: u16, rect_y: u16, rect_w: u16, rect_h: u16) -> [(u16, u
 impl<InnerQuadrants> Quadrants for [InnerQuadrants; 4] where InnerQuadrants: Quadrants {
     type DataT = InnerQuadrants::DataT;
     /// Construct 4 empty quadrants, each containing other quadrants
-    fn new(rect_x: u16, rect_y: u16, rect_w: u16, rect_h: u16) -> Self {
+    fn new_empty(rect_x: u16, rect_y: u16, rect_w: u16, rect_h: u16) -> Self {
         let rects = divide_into_4(rect_x, rect_y, rect_w, rect_h);
         [
-            InnerQuadrants::new(rects[0].0, rects[0].1, rects[0].2, rects[0].3),
-            InnerQuadrants::new(rects[1].0, rects[1].1, rects[1].2, rects[1].3),
-            InnerQuadrants::new(rects[2].0, rects[2].1, rects[2].2, rects[2].3),
-            InnerQuadrants::new(rects[3].0, rects[3].1, rects[3].2, rects[3].3)
+            InnerQuadrants::new_empty(rects[0].0, rects[0].1, rects[0].2, rects[0].3),
+            InnerQuadrants::new_empty(rects[1].0, rects[1].1, rects[1].2, rects[1].3),
+            InnerQuadrants::new_empty(rects[2].0, rects[2].1, rects[2].2, rects[2].3),
+            InnerQuadrants::new_empty(rects[3].0, rects[3].1, rects[3].2, rects[3].3)
         ]
     }
     fn clear(&mut self) {
@@ -134,13 +134,13 @@ impl<InnerQuadrants> Quadrants for [InnerQuadrants; 4] where InnerQuadrants: Qua
 impl<DataT> Quadrants for [QuadTreeLeaf<DataT>; 4] {
     type DataT = DataT;
     /// Construct 4 empty leaves
-    fn new(rect_x: u16, rect_y: u16, rect_w: u16, rect_h: u16) -> Self {
+    fn new_empty(rect_x: u16, rect_y: u16, rect_w: u16, rect_h: u16) -> Self {
         let rects = divide_into_4(rect_x, rect_y, rect_w, rect_h);
         [
-            QuadTreeLeaf::new(rects[0].0, rects[0].1, rects[0].2, rects[0].3),
-            QuadTreeLeaf::new(rects[1].0, rects[1].1, rects[1].2, rects[1].3),
-            QuadTreeLeaf::new(rects[2].0, rects[2].1, rects[2].2, rects[2].3),
-            QuadTreeLeaf::new(rects[3].0, rects[3].1, rects[3].2, rects[3].3)
+            QuadTreeLeaf::new_empty(rects[0].0, rects[0].1, rects[0].2, rects[0].3),
+            QuadTreeLeaf::new_empty(rects[1].0, rects[1].1, rects[1].2, rects[1].3),
+            QuadTreeLeaf::new_empty(rects[2].0, rects[2].1, rects[2].2, rects[2].3),
+            QuadTreeLeaf::new_empty(rects[3].0, rects[3].1, rects[3].2, rects[3].3)
         ]
     }
     fn clear(&mut self) {
@@ -203,7 +203,7 @@ impl<DataT> Quadrants for [QuadTreeLeaf<DataT>; 4] {
 
 /// A QuadTree leaf with a constructor and a method to insert a point
 impl<DataT> QuadTreeLeaf<DataT> {
-    fn new(rect_x: u16, rect_y: u16, rect_w: u16, rect_h: u16) -> Self {
+    fn new_empty(rect_x: u16, rect_y: u16, rect_w: u16, rect_h: u16) -> Self {
         QuadTreeLeaf {data: Vec::new(), positions: Vec::new(), rect_x, rect_y, rect_w, rect_h}
     }
     fn clear(&mut self) {
@@ -225,7 +225,7 @@ impl<DataT> QuadTreeLeaf<DataT> {
 }
 use super::GetX;
 use super::GetY;
-pub fn rebuild_tree<Entity: GetX+GetY>(tree: &mut QuadTree<&mut Entity>, model: &mut Vec<Entity>) {
+pub fn rebuild_from_model<Entity: GetX+GetY>(tree: &mut QuadTree<&mut Entity>, model: &mut Vec<Entity>) {
     tree.clear();
     for i in 0..model.len() {
         let entity = &mut model[i] as *mut Entity;
@@ -233,4 +233,24 @@ pub fn rebuild_tree<Entity: GetX+GetY>(tree: &mut QuadTree<&mut Entity>, model: 
         //insert a reference to the entity into the tree
         tree.insert(entity.get_x(), entity.get_y(), entity);
     }
+}
+
+pub unsafe fn build_from_model<Entity: GetX+GetY>(empty_tree: &mut QuadTree<&mut Entity>, model: &mut Vec<Entity>) {
+    for i in 0..model.len() {
+        let entity = &mut model[i] as *mut Entity;
+        let entity =  &mut *entity;
+        //insert a reference to the entity into the tree
+        empty_tree.insert(entity.get_x(), entity.get_y(), entity);
+    }
+}
+
+// A version that returns a QuadTree that owns clones of the entities
+pub fn build_owned_from_model<Entity: GetX+GetY+Clone>(model: &mut Vec<Entity>) -> QuadTree<Entity> {
+    let mut tree = QuadTree::new_empty(0, 0, 1000, 1000);
+    for i in 0..model.len() {
+        let entity = model[i].clone();
+        //insert a reference to the entity into the tree
+        tree.insert(entity.get_x(), entity.get_y(), entity);
+    }
+    tree
 }

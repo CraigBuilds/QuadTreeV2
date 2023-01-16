@@ -26,7 +26,7 @@ fn divide_into_4(rect_x: u16, rect_y: u16, rect_w: u16, rect_h: u16) -> [(u16, u
 /// A QuadTree is a recursive data structure that divides a rectangle into 4 quadrants, each containing other quadrants, or a leaf
 impl<DataT> QuadTree<DataT> {
     /// Construct 4 empty quadrants, each containing other quadrants, or a leaf
-    pub fn new(rect_x: u16, rect_y: u16, rect_w: u16, rect_h: u16, depth: u16) -> Self {
+    pub fn new_empty(rect_x: u16, rect_y: u16, rect_w: u16, rect_h: u16, depth: u16) -> Self {
         if depth == 0 {
             QuadTree::Leaf {
                 data: Vec::new(),
@@ -39,10 +39,10 @@ impl<DataT> QuadTree<DataT> {
         } else {
             let rect = divide_into_4(rect_x, rect_y, rect_w, rect_h);
             QuadTree::Quads([
-                Box::new(QuadTree::new(rect[0].0, rect[0].1, rect[0].2, rect[0].3, depth - 1)),
-                Box::new(QuadTree::new(rect[1].0, rect[1].1, rect[1].2, rect[1].3, depth - 1)),
-                Box::new(QuadTree::new(rect[2].0, rect[2].1, rect[2].2, rect[2].3, depth - 1)),
-                Box::new(QuadTree::new(rect[3].0, rect[3].1, rect[3].2, rect[3].3, depth - 1)),
+                Box::new(QuadTree::new_empty(rect[0].0, rect[0].1, rect[0].2, rect[0].3, depth - 1)),
+                Box::new(QuadTree::new_empty(rect[1].0, rect[1].1, rect[1].2, rect[1].3, depth - 1)),
+                Box::new(QuadTree::new_empty(rect[2].0, rect[2].1, rect[2].2, rect[2].3, depth - 1)),
+                Box::new(QuadTree::new_empty(rect[3].0, rect[3].1, rect[3].2, rect[3].3, depth - 1)),
             ])
         }
     }
@@ -170,7 +170,7 @@ impl<DataT> QuadTree<DataT> {
 }
 use super::GetX;
 use super::GetY;
-pub fn rebuild_tree<Entity: GetX+GetY>(tree: &mut QuadTree<&mut Entity>, model: &mut Vec<Entity>) {
+pub fn rebuild_from_model<Entity: GetX+GetY>(tree: &mut QuadTree<&mut Entity>, model: &mut Vec<Entity>) {
     tree.clear();
     for i in 0..model.len() {
         let entity = &mut model[i] as *mut Entity;
@@ -178,4 +178,24 @@ pub fn rebuild_tree<Entity: GetX+GetY>(tree: &mut QuadTree<&mut Entity>, model: 
         //insert a reference to the entity into the tree
         tree.insert(entity.get_x(), entity.get_y(), entity);
     }
+}
+
+pub unsafe fn build_from_model<Entity: GetX+GetY>(empty_tree: &mut QuadTree<&mut Entity>, model: &mut Vec<Entity>) {
+    for i in 0..model.len() {
+        let entity = &mut model[i] as *mut Entity;
+        let entity = &mut *entity;
+        //insert a reference to the entity into the tree
+        empty_tree.insert(entity.get_x(), entity.get_y(), entity);
+    }
+}
+
+// A version that returns a QuadTree that owns clones of the entities
+pub fn build_owned_from_model<Entity: GetX+GetY+Clone>(model: &mut Vec<Entity>, depth: u16) -> QuadTree<Entity> {
+    let mut tree = QuadTree::new_empty(0, 0, 1000, 1000, depth);
+    for i in 0..model.len() {
+        let entity = model[i].clone();
+        //insert a reference to the entity into the tree
+        tree.insert(entity.get_x(), entity.get_y(), entity);
+    }
+    tree
 }
