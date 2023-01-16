@@ -32,6 +32,7 @@ fn main() {
             tree.insert(entity.x, entity.y, entity);
         }
 
+        //update the entities
         for entity in model.iter_mut() {
             let local_model = &mut tree.get_mut_leaf_around(entity.x, entity.y).unwrap().data;
             update_entity(entity, local_model);
