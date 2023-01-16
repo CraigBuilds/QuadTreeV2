@@ -168,6 +168,7 @@ impl<DataT> QuadTree<DataT> {
         }
     }
 }
+
 use super::GetX;
 use super::GetY;
 pub fn rebuild_from_model<Entity: GetX+GetY>(tree: &mut QuadTree<&mut Entity>, model: &mut Vec<Entity>) {
