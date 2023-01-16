@@ -38,6 +38,14 @@ pub trait Quadrants{
     fn get_leaf_around(&self, x: u16, y: u16) -> Option<&QuadTreeLeaf<Self::DataT>>;
     /// Return a mutable reference to the leaf that contains the point
     fn get_mut_leaf_around(&mut self, x: u16, y: u16) -> Option<&mut QuadTreeLeaf<Self::DataT>>;
+    ///convienience function for get_leaf_around that returns a reference to the vec of data
+    fn broad_phase(&self, x: u16, y: u16) -> &Vec<Self::DataT> {
+        &self.get_leaf_around(x, y).unwrap().data
+    }
+    ///convienience function for get_mut_leaf_around that returns a mutable reference to the vec of data
+    fn broad_phase_mut(&mut self, x: u16, y: u16) -> &mut Vec<Self::DataT> {
+        &mut self.get_mut_leaf_around(x, y).unwrap().data
+    }
     //used for debugging
     const DEPTH: usize;
 }

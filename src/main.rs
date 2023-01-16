@@ -14,13 +14,14 @@ fn main() {
 
     let mut tree = QuadTree::new(0,0,128,128); //128x128 world, 8x8 grid, so every leaf is 16x16
 
-    '_main: loop {
+    loop {
 
         rebuild_tree(&mut tree, &mut model);
 
         //update the entities
         for entity in model.iter_mut() {
-            let local_model = &mut tree.get_mut_leaf_around(entity.x, entity.y).unwrap().data;
+            //let local_model = &mut tree.get_mut_leaf_around(entity.x, entity.y).unwrap().data;
+            let local_model = tree.broad_phase_mut(entity.x, entity.y);
             update_entity(entity, local_model);
         }
     }
