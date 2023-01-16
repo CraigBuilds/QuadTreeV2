@@ -218,3 +218,15 @@ impl<DataT> QuadTreeLeaf<DataT> {
         }
     }
 }
+
+pub trait GetX {fn get_x(&self) -> u16;}
+pub trait GetY {fn get_y(&self) -> u16;}
+pub fn rebuild_tree<Entity: GetX+GetY>(tree: &mut QuadTree<&mut Entity>, model: &mut Vec<Entity>) {
+    tree.clear();
+    for i in 0..model.len() {
+        let entity = &mut model[i] as *mut Entity;
+        let entity = unsafe {&mut *entity};
+        //insert a reference to the entity into the tree
+        tree.insert(entity.get_x(), entity.get_y(), entity);
+    }
+}
