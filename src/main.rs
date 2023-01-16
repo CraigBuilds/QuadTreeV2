@@ -1,14 +1,7 @@
 mod quad_tree;
 use quad_tree::*;
-
-#[derive(Debug)]
-pub struct Entity {
-    pub x: u16,
-    pub y: u16,
-    pub width: u16,
-    pub height: u16,
-    pub collision: bool,
-}
+mod entity;
+use entity::*;
 
 fn main() {
     
@@ -23,14 +16,7 @@ fn main() {
 
     '_main: loop {
 
-        //rebuild the tree
-        tree.clear();
-        for i in 0..model.len() {
-            let entity = &mut model[i] as *mut Entity;
-            let entity = unsafe {&mut *entity};
-            //insert a reference to the entity into the tree
-            tree.insert(entity.x, entity.y, entity);
-        }
+        rebuild_tree(&mut tree, &mut model);
 
         //update the entities
         for entity in model.iter_mut() {
@@ -38,19 +24,4 @@ fn main() {
             update_entity(entity, local_model);
         }
     }
-}
-
-fn update_entity<'a>(entity: &mut Entity, local_model: &mut Vec<&'a mut Entity>) {
-    for other_entity in local_model {
-        if is_coliding(entity, other_entity) {
-            entity.collision = true;
-        }
-    }
-}
-
-fn is_coliding(entity: &Entity, other_entity: &Entity) -> bool {
-    entity.x < other_entity.x + other_entity.width &&
-    entity.x + entity.width > other_entity.x &&
-    entity.y < other_entity.y + other_entity.height &&
-    entity.y + entity.height > other_entity.y
 }
