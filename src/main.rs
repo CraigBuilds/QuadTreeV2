@@ -1,5 +1,6 @@
 mod quad_tree;
 use quad_tree::*;
+use core::slice::*;
 
 #[derive(Debug)]
 pub struct Entity {
@@ -32,19 +33,19 @@ fn main() {
             tree.insert(entity.x, entity.y, entity);
         }
 
-        for local_model in into_iter(&tree) {
-            for i in 0..local_model.len() {
-                let (entity, leading, trailing) = split_at_rest(local_model, i);
-                let others = chain_others(leading, trailing);
-                update_entity(entity, others);
-            }
+        for entity in model.iter_mut() {
+            let local_model = &tree.get_leaf_around(entity.x, entity.y).unwrap().data;
+            update_entity(entity, local_model);
         }
-        println!("");
     }
 }
 
-fn update_entity<'a>(_entity: &&mut Entity, _local_model: impl Iterator<Item = &'a &'a mut Entity>) {
-
+fn update_entity<'a>(entity: &mut Entity, local_model: &Vec<&'a mut Entity>) {
+    for other_entity in local_model {
+        if is_coliding(entity, other_entity) {
+            entity.collision = true;
+        }
+    }
 }
 
 fn is_coliding(entity: &Entity, other_entity: &Entity) -> bool {
@@ -52,27 +53,4 @@ fn is_coliding(entity: &Entity, other_entity: &Entity) -> bool {
     entity.x + entity.width > other_entity.x &&
     entity.y < other_entity.y + other_entity.height &&
     entity.y + entity.height > other_entity.y
-}
-
-pub fn split_at_rest_mut<T>(x: &mut [T], index: usize) -> (&mut T, &mut [T], &mut [T]) {
-    debug_assert!(index < x.len());
-    let (leading, trailing) = x.split_at_mut(index); //TODO unchecked version?
-    let (val, trailing) = trailing.split_first_mut().unwrap();
-    (val, leading, trailing)
-}
-
-pub fn split_at_rest<T>(x: & [T], index: usize) -> (& T, & [T], & [T]) {
-    debug_assert!(index < x.len());
-    let (leading, trailing) = x.split_at(index); //TODO unchecked version?
-    let (val, trailing) = trailing.split_first().unwrap();
-    (val, leading, trailing)
-}
-
-
-pub fn chain_others_mut<'a, T>(leading: &'a mut [T], trailing: &'a mut [T]) -> impl Iterator<Item = &'a mut T> {
-    leading.iter_mut().chain(trailing.iter_mut())
-}
-
-pub fn chain_others<'a, T>(leading: &'a [T], trailing: &'a [T]) -> impl Iterator<Item = &'a T> {
-    leading.iter().chain(trailing.iter())
 }
