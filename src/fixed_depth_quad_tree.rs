@@ -1,5 +1,6 @@
 /// The QuadTree is a recursive data structure that divides a rectangle into 4 quadrants, each containing other quadrants, or a leaf
 /// The default depth is 3, which gives a 8x8 grid of leaves
+/// TODO use newtype pattern? Convert free functions into associated functions?
 pub type QuadTree<DataT> = QuadTreeDepth3<DataT>;
 
 /// 4 quadrants, each containing 4 quadrants, each containing 4 Leafs (8x8 grid, see README.md)
