@@ -191,7 +191,7 @@ impl<Entity: GetX+GetY> QuadTree<Entity> {
 
     /// Build a new QuadTree from scratch, and put references to the entities in it. The references are
     /// anotated as static because this uses unsafe code to create them.
-    pub fn build_new_from_model<'a, 'b>(model: &'a mut Vec<Entity>, width: u16, height: u16, depth: u16) -> QuadTree<&'b mut Entity> {
+    pub fn build_new_from_model(model: & mut Vec<Entity>, width: u16, height: u16, depth: u16) -> QuadTree<&'static mut Entity> {
         let mut tree = QuadTree::new_empty(0, 0, width, height, depth);
         for i in 0..model.len() {
             let entity = &mut model[i] as *mut Entity;
