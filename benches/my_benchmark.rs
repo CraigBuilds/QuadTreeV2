@@ -42,6 +42,7 @@ fn enum_tree_main(model: &mut Vec<Entity>, tree: &mut EnumQuadTree<&mut Entity>)
 }
 
 //TODO https://bheisler.github.io/criterion.rs/book/user_guide/benchmarking_with_inputs.html#benchmarking-with-a-range-of-values
+//TODO test with differnt depths, entity size variance, and world sizes
 
 fn bench_no_broad_phase(c: &mut Criterion) {
     let config = ModelConfig{model_size: 1000, world_size: 128};
