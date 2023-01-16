@@ -26,27 +26,27 @@ pub struct QuadTreeLeaf<DataT> {
 /// Trait for an array of 4 QuadTreeLeaves or 4 other Quadrants
 pub trait Quadrants{
     type DataT;
-    ///Construct 4 empty quadrants, each containing other quadrants, or a leaf
+    /// Construct 4 empty quadrants, each containing other quadrants, or a leaf
     fn new(rect_x: u16, rect_y: u16, rect_w: u16, rect_h: u16) -> Self;
-    ///Remove all points from all leaves
+    /// Remove all points from all leaves
     fn clear(&mut self);
     /// Insert a point into the correct leaf, or return false if it doesn't fit
     fn can_insert(&mut self, x: u16, y: u16) -> bool;
-    //TODO remove bool return value
+    // Insert a point into the correct leaf, or return false if it doesn't fit
     fn insert(&mut self, x: u16, y: u16, data: Self::DataT) -> bool;
     /// Return a reference to the leaf that contains the point
     fn get_leaf_around(&self, x: u16, y: u16) -> Option<&QuadTreeLeaf<Self::DataT>>;
     /// Return a mutable reference to the leaf that contains the point
     fn get_mut_leaf_around(&mut self, x: u16, y: u16) -> Option<&mut QuadTreeLeaf<Self::DataT>>;
-    ///convienience function for get_leaf_around that returns a reference to the vec of data
+    /// Convienience function for get_leaf_around that returns a reference to the vec of data
     fn broad_phase(&self, x: u16, y: u16) -> &Vec<Self::DataT> {
         &self.get_leaf_around(x, y).unwrap().data
     }
-    ///convienience function for get_mut_leaf_around that returns a mutable reference to the vec of data
+    /// Convienience function for get_mut_leaf_around that returns a mutable reference to the vec of data
     fn broad_phase_mut(&mut self, x: u16, y: u16) -> &mut Vec<Self::DataT> {
         &mut self.get_mut_leaf_around(x, y).unwrap().data
     }
-    //used for debugging
+    // Used for debugging
     const DEPTH: usize;
 }
 
@@ -54,7 +54,7 @@ pub trait Quadrants{
 /// Each depth of the tree is a different type so we use a recursive impl to implement each depth.
 impl<InnerQuadrants> Quadrants for [InnerQuadrants; 4] where InnerQuadrants: Quadrants {
     type DataT = InnerQuadrants::DataT;
-    ///Construct 4 empty quadrants, each containing other quadrants
+    /// Construct 4 empty quadrants, each containing other quadrants
     fn new(rect_x: u16, rect_y: u16, rect_w: u16, rect_h: u16) -> Self {
         let rects = divide_into_4(rect_x, rect_y, rect_w, rect_h);
         [
@@ -129,7 +129,7 @@ impl<InnerQuadrants> Quadrants for [InnerQuadrants; 4] where InnerQuadrants: Qua
 /// This is the bottom of the recursive impl chain, it interacts with the leaf instead of another quadrant.
 impl<DataT> Quadrants for [QuadTreeLeaf<DataT>; 4] {
     type DataT = DataT;
-    ///Construct 4 empty leaves
+    /// Construct 4 empty leaves
     fn new(rect_x: u16, rect_y: u16, rect_w: u16, rect_h: u16) -> Self {
         let rects = divide_into_4(rect_x, rect_y, rect_w, rect_h);
         [
