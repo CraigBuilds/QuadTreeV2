@@ -4,7 +4,7 @@ use rust_quadmap_v2::fixed_depth_quad_tree::*;
 use rust_quadmap_v2::enum_quadtree::{
     QuadTree as EnumQuadTree,
     rebuild_from_model as rebuild_from_model_enum,
-    build_from_model as build_from_model_enum,
+    build_new_from_model as build_new_from_model_enum,
 };
 
 //// The _main functions are called once per frame by the bencher. This is the same behavior as
@@ -36,9 +36,7 @@ fn fixed_depth_tree_main(model: &mut Vec<Entity>, tree: &mut QuadTree<&mut Entit
 
 fn fixed_depth_tree_no_cache_main(model: &mut Vec<Entity>) {
     
-    let mut tree = QuadTree::new_empty(0, 0, 128, 128);
-    ////SAFETY This is safe because the tree is empty
-    unsafe { build_from_model(&mut tree, model) };
+    let mut tree = build_new_from_model(model);
 
     //update the entities
     for entity in model.iter_mut() {
@@ -62,9 +60,7 @@ fn enum_tree_main(model: &mut Vec<Entity>, tree: &mut EnumQuadTree<&mut Entity>)
 
 fn enum_tree_no_cache_main(model: &mut Vec<Entity>) {
     
-    let mut tree = EnumQuadTree::new_empty(0, 0, 128, 128, 3);
-    ////SAFETY This is safe because the tree is empty
-    unsafe{ build_from_model_enum(&mut tree, model) };
+    let mut tree = build_new_from_model_enum(model, 3);
 
     //update the entities
     for entity in model.iter_mut() {

@@ -238,15 +238,16 @@ pub fn rebuild_from_model<Entity: GetX+GetY>(tree: &mut QuadTree<&mut Entity>, m
     }
 }
 
-/// Empty tree must come from parent scope so borrow checker knows it has the same lifetime as the model
-// If the tree is not empty, it could end up containing multiple mutable references to the same entity
-pub unsafe fn build_from_model<Entity: GetX+GetY>(empty_tree: &mut QuadTree<&mut Entity>, model: &mut Vec<Entity>) {
+pub fn build_new_from_model<'a, 'b, Entity: GetX+GetY>(model: &'a mut Vec<Entity>) -> QuadTree<&'b mut Entity> {
+    let mut tree = QuadTree::new_empty(0, 0, 1000, 1000);
     for i in 0..model.len() {
         let entity = &mut model[i] as *mut Entity;
-        let entity =  &mut *entity;
+        //// SAFETY: This is safe because the tree is new before being filled.
+        let entity =  unsafe{&mut *entity};
         //insert a reference to the entity into the tree
-        empty_tree.insert(entity.get_x(), entity.get_y(), entity);
+        tree.insert(entity.get_x(), entity.get_y(), entity);
     }
+    tree
 }
 
 /// A version that returns a QuadTree that owns clones of the entities
