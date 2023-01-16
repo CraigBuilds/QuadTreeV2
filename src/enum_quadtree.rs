@@ -1,4 +1,4 @@
-/// E.g 4 quadrants, each containing 4 quadrants, each containing 4 Leafs (8x8 grid, see README.md)
+/// The QuadTree is a recursive data structure that divides a rectangle into 4 quadrants, each containing other quadrants, or a leaf
 pub enum QuadTree<DataT> {
     Leaf {
         data: Vec<DataT>,

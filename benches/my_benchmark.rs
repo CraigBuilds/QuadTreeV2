@@ -3,6 +3,7 @@ use rust_quadmap_v2::entity::*;
 use rust_quadmap_v2::quad_tree::*;
 use rust_quadmap_v2::enum_quadtree::QuadTree as EnumQuadTree;
 use rust_quadmap_v2::enum_quadtree::rebuild_tree as rebuild_tree_enum;
+
 //This is called once per frame by the bencher. It is the same as the main game loop
 fn no_broad_phase_main(model: &mut Vec<Entity>) {
 
