@@ -1,6 +1,7 @@
 /// The QuadTree is a recursive data structure that divides a rectangle into 4 quadrants, each containing other quadrants, or a leaf
 pub enum QuadTree<DataT> {
     Leaf {
+        //TODO DataT: GetX + GetY
         data: Vec<DataT>,
         positions: Vec<(u16, u16)>,
         rect_x: u16,

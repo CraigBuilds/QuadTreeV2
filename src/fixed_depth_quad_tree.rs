@@ -10,6 +10,7 @@ pub struct QuadTreeLeaf<DataT> {
     //Bucket of data within the tree. This is intended to contain references to entities owned by the game model.
     pub data: Vec<DataT>,
     //For simplicity the, positions of the data elements are stored separately from the data.
+    //TODO DataT: GetX + GetY
     positions: Vec<(u16, u16)>,
     //The bounding box of the leaf
     rect_x: u16, rect_y: u16, rect_w: u16, rect_h: u16,
