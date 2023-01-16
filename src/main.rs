@@ -20,7 +20,6 @@ fn main() {
 
         //update the entities
         for entity in model.iter_mut() {
-            //let local_model = &mut tree.get_mut_leaf_around(entity.x, entity.y).unwrap().data;
             let local_model = tree.broad_phase_mut(entity.x, entity.y);
             update_entity(entity, local_model);
         }
