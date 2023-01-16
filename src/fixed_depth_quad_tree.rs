@@ -220,6 +220,7 @@ use super::GetX;
 use super::GetY;
 
 impl<DataT> QuadTree<DataT> {
+    /// Construct a new QuadTree with the given bounds
     pub fn new_empty(rect_x: u16, rect_y: u16, rect_w: u16, rect_h: u16) -> Self {
         Self(QuadTreeImpl::new_empty(rect_x, rect_y, rect_w, rect_h))
     }
@@ -235,6 +236,9 @@ impl<DataT> QuadTree<DataT> {
 
 impl<Entity: GetX+GetY> QuadTree<Entity> {
 
+    /// Rebuild a QuadTree from a model. This is used to update the tree after the model has changed.
+    /// It clears the tree, then puts references to the entities back in it, however it does not
+    /// change the capacities of the underlying Vecs.
     pub fn rebuild_from_model(tree: &mut QuadTree<&mut Entity>, model: &mut Vec<Entity>) {
         tree.0.clear();
         for i in 0..model.len() {
@@ -246,7 +250,9 @@ impl<Entity: GetX+GetY> QuadTree<Entity> {
         }
     }
 
-    pub fn build_new_from_model<'a, 'b>(model: &'a mut Vec<Entity>, width: u16, height: u16) -> QuadTree<&'b mut Entity> {
+    /// Build a new QuadTree from scratch, and put references to the entities in it. The references are
+    /// anotated as static because this uses unsafe code to create them.
+    pub fn build_new_from_model(model: &mut Vec<Entity>, width: u16, height: u16) -> QuadTree<&'static mut Entity> {
         let mut tree = QuadTree::new_empty(0, 0, width, height);
         for i in 0..model.len() {
             let entity = &mut model[i] as *mut Entity;

@@ -174,6 +174,9 @@ use super::GetY;
 
 impl<Entity: GetX+GetY> QuadTree<Entity> {
 
+    /// Rebuild a QuadTree from a model. This is used to update the tree after the model has changed.
+    /// It clears the tree, then puts references to the entities back in it, however it does not
+    /// change the capacities of the underlying Vecs.
     pub fn rebuild_from_model(tree: &mut QuadTree<&mut Entity>, model: &mut Vec<Entity>) {
         tree.clear();
         for i in 0..model.len() {
@@ -185,6 +188,9 @@ impl<Entity: GetX+GetY> QuadTree<Entity> {
         }
     }
 
+
+    /// Build a new QuadTree from scratch, and put references to the entities in it. The references are
+    /// anotated as static because this uses unsafe code to create them.
     pub fn build_new_from_model<'a, 'b>(model: &'a mut Vec<Entity>, width: u16, height: u16, depth: u16) -> QuadTree<&'b mut Entity> {
         let mut tree = QuadTree::new_empty(0, 0, width, height, depth);
         for i in 0..model.len() {
@@ -200,7 +206,7 @@ impl<Entity: GetX+GetY> QuadTree<Entity> {
 
 impl<Entity: GetX+GetY+Clone> QuadTree<Entity> {
 
-    // A version that returns a QuadTree that owns clones of the entities
+    /// A version that returns a QuadTree that owns clones of the entities
     pub fn build_owned_from_model(model: &mut Vec<Entity>, depth: u16) -> QuadTree<Entity> {
         let mut tree = QuadTree::new_empty(0, 0, 1000, 1000, depth);
         for i in 0..model.len() {
