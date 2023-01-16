@@ -1,6 +1,6 @@
 #![feature(test)]
 
-pub mod quad_tree;
+pub mod fixed_depth_quad_tree;
 pub mod enum_quadtree;
 pub mod entity;
 use entity::*;
@@ -10,7 +10,7 @@ pub trait GetY {fn get_y(&self) -> u16;}
 
 pub fn example_main() {
     
-    use quad_tree::*;
+    use fixed_depth_quad_tree::*;
 
     let mut model = init_model(Default::default());
     let mut tree = QuadTree::new_empty(0,0,128,128); //128x128 world, 8x8 grid, so every leaf is 16x16

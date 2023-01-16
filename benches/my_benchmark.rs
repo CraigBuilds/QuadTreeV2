@@ -1,6 +1,6 @@
 use criterion::{criterion_group, criterion_main, Criterion};
 use rust_quadmap_v2::entity::*;
-use rust_quadmap_v2::quad_tree::*;
+use rust_quadmap_v2::fixed_depth_quad_tree::*;
 use rust_quadmap_v2::enum_quadtree::{
     QuadTree as EnumQuadTree,
     rebuild_from_model as rebuild_from_model_enum,
@@ -22,7 +22,7 @@ fn no_broad_phase_main(model: &mut Vec<Entity>) {
 
 }
 
-fn static_tree_main(model: &mut Vec<Entity>, tree: &mut QuadTree<&mut Entity>) {
+fn fixed_depth_tree_main(model: &mut Vec<Entity>, tree: &mut QuadTree<&mut Entity>) {
     
     rebuild_from_model(tree, model);
 
@@ -34,7 +34,7 @@ fn static_tree_main(model: &mut Vec<Entity>, tree: &mut QuadTree<&mut Entity>) {
 
 }
 
-fn static_tree_no_cache_main(model: &mut Vec<Entity>) {
+fn fixed_depth_tree_no_cache_main(model: &mut Vec<Entity>) {
     
     let mut tree = QuadTree::new_empty(0, 0, 128, 128);
     ////SAFETY This is safe because the tree is empty
@@ -83,17 +83,17 @@ fn bench_no_broad_phase(c: &mut Criterion) {
     c.bench_function(&format!("no_broad_phase_main({:?})", config), |b| b.iter(|| no_broad_phase_main(&mut model)));
 }
 
-fn bench_static_tree(c: &mut Criterion) {
+fn bench_fixed_depth_tree(c: &mut Criterion) {
     let config = ModelConfig{model_size: 1000, world_size: 128};
     let mut model = init_model(config);
     let mut tree = QuadTree::new_empty(0,0,128,128); //128x128 world, 8x8 grid, so every leaf is 16x16
-    c.bench_function(&format!("static_tree_main({:?})", config), |b| b.iter(|| static_tree_main(&mut model, &mut tree)));
+    c.bench_function(&format!("fixed_depth_tree_main({:?})", config), |b| b.iter(|| fixed_depth_tree_main(&mut model, &mut tree)));
 }
 
-fn bench_static_tree_no_cache(c: &mut Criterion) {
+fn bench_fixed_depth_tree_no_cache(c: &mut Criterion) {
     let config = ModelConfig{model_size: 1000, world_size: 128};
     let mut model = init_model(config);
-    c.bench_function(&format!("static_tree_no_cache_main({:?})", config), |b| b.iter(|| static_tree_no_cache_main(&mut model)));
+    c.bench_function(&format!("fixed_depth_tree_no_cache_main({:?})", config), |b| b.iter(|| fixed_depth_tree_no_cache_main(&mut model)));
 }
 
 fn bench_enum_tree(c: &mut Criterion) {
@@ -112,7 +112,7 @@ fn bench_enum_tree_no_cache(c: &mut Criterion) {
 criterion_group!(
     name = benches;
     config = Criterion::default();
-    targets = bench_no_broad_phase, bench_static_tree, bench_enum_tree, bench_static_tree_no_cache, bench_enum_tree_no_cache
+    targets = bench_no_broad_phase, bench_fixed_depth_tree, bench_enum_tree, bench_fixed_depth_tree_no_cache, bench_enum_tree_no_cache
 );
 
 criterion_main!(benches);
