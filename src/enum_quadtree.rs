@@ -171,37 +171,43 @@ impl<DataT> QuadTree<DataT> {
 
 use super::GetX;
 use super::GetY;
-pub fn rebuild_from_model<Entity: GetX+GetY>(tree: &mut QuadTree<&mut Entity>, model: &mut Vec<Entity>) {
-    tree.clear();
-    for i in 0..model.len() {
-        let entity = &mut model[i] as *mut Entity;
-        ////SAFETY: This is safe because the tree is empty
-        let entity = unsafe {&mut *entity};
-        //insert a reference to the entity into the tree
-        tree.insert(entity.get_x(), entity.get_y(), entity);
+
+impl<Entity: GetX+GetY> QuadTree<Entity> {
+
+    pub fn rebuild_from_model(tree: &mut QuadTree<&mut Entity>, model: &mut Vec<Entity>) {
+        tree.clear();
+        for i in 0..model.len() {
+            let entity = &mut model[i] as *mut Entity;
+            //// SAFETY: This is safe because the tree is cleared before being filled.
+            let entity = unsafe {&mut *entity};
+            //insert a reference to the entity into the tree
+            tree.insert(entity.get_x(), entity.get_y(), entity);
+        }
+    }
+
+    pub fn build_new_from_model<'a, 'b>(model: &'a mut Vec<Entity>, width: u16, height: u16, depth: u16) -> QuadTree<&'b mut Entity> {
+        let mut tree = QuadTree::new_empty(0, 0, width, height, depth);
+        for i in 0..model.len() {
+            let entity = &mut model[i] as *mut Entity;
+            //// SAFETY: This is safe because the tree is new before being filled.
+            let entity =  unsafe{&mut *entity};
+            //insert a reference to the entity into the tree
+            tree.insert(entity.get_x(), entity.get_y(), entity);
+        }
+        tree
     }
 }
 
-pub fn build_new_from_model<'a, 'b, Entity: GetX+GetY>(model: &'a mut Vec<Entity>, depth: u16) -> QuadTree<&'b mut Entity> {
-    let mut tree = QuadTree::new_empty(0, 0, 1000, 1000, depth);
-    for i in 0..model.len() {
-        let entity = &mut model[i] as *mut Entity;
-        //// SAFETY: This is safe because the tree is new before being filled.
-        let entity =  unsafe{&mut *entity};
-        //insert a reference to the entity into the tree
-        tree.insert(entity.get_x(), entity.get_y(), entity);
-    }
-    tree
-}
+impl<Entity: GetX+GetY+Clone> QuadTree<Entity> {
 
-
-// A version that returns a QuadTree that owns clones of the entities
-pub fn build_owned_from_model<Entity: GetX+GetY+Clone>(model: &mut Vec<Entity>, depth: u16) -> QuadTree<Entity> {
-    let mut tree = QuadTree::new_empty(0, 0, 1000, 1000, depth);
-    for i in 0..model.len() {
-        let entity = model[i].clone();
-        //insert a reference to the entity into the tree
-        tree.insert(entity.get_x(), entity.get_y(), entity);
+    // A version that returns a QuadTree that owns clones of the entities
+    pub fn build_owned_from_model(model: &mut Vec<Entity>, depth: u16) -> QuadTree<Entity> {
+        let mut tree = QuadTree::new_empty(0, 0, 1000, 1000, depth);
+        for i in 0..model.len() {
+            let entity = model[i].clone();
+            //insert a reference to the entity into the tree
+            tree.insert(entity.get_x(), entity.get_y(), entity);
+        }
+        tree
     }
-    tree
 }

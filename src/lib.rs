@@ -18,7 +18,7 @@ pub fn example_main() {
     //the main game loop
     loop {
 
-        rebuild_from_model(&mut tree, &mut model);
+        QuadTree::rebuild_from_model(&mut tree, &mut model);
 
         //update the entities
         for entity in model.iter_mut() {
@@ -38,7 +38,7 @@ pub fn example_main_2() {
     //the main game loop
     loop {
 
-        rebuild_from_model(&mut tree, &mut model);
+        QuadTree::rebuild_from_model(&mut tree, &mut model);
 
         //update the entities
         for entity in model.iter_mut() {

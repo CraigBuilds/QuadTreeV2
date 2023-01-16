@@ -1,11 +1,8 @@
 use criterion::{criterion_group, criterion_main, Criterion};
 use rust_quadmap_v2::entity::*;
 use rust_quadmap_v2::fixed_depth_quad_tree::*;
-use rust_quadmap_v2::enum_quadtree::{
-    QuadTree as EnumQuadTree,
-    rebuild_from_model as rebuild_from_model_enum,
-    build_new_from_model as build_new_from_model_enum,
-};
+use rust_quadmap_v2::enum_quadtree::QuadTree as EnumQuadTree;
+
 
 //// The _main functions are called once per frame by the bencher. This is the same behavior as
 //// if they are in an outer loop (main game loop).
@@ -24,7 +21,7 @@ fn no_broad_phase_main(model: &mut Vec<Entity>) {
 
 fn fixed_depth_tree_main(model: &mut Vec<Entity>, tree: &mut QuadTree<&mut Entity>) {
     
-    rebuild_from_model(tree, model);
+    QuadTree::rebuild_from_model(tree, model);
 
     //update the entities
     for entity in model.iter_mut() {
@@ -36,7 +33,7 @@ fn fixed_depth_tree_main(model: &mut Vec<Entity>, tree: &mut QuadTree<&mut Entit
 
 fn fixed_depth_tree_no_cache_main(model: &mut Vec<Entity>) {
     
-    let mut tree = build_new_from_model(model);
+    let mut tree = QuadTree::build_new_from_model(model, 128, 128);
 
     //update the entities
     for entity in model.iter_mut() {
@@ -48,7 +45,7 @@ fn fixed_depth_tree_no_cache_main(model: &mut Vec<Entity>) {
 
 fn enum_tree_main(model: &mut Vec<Entity>, tree: &mut EnumQuadTree<&mut Entity>) {
     
-    rebuild_from_model_enum(tree, model);
+    EnumQuadTree::rebuild_from_model(tree, model);
 
     //update the entities
     for entity in model.iter_mut() {
@@ -60,7 +57,7 @@ fn enum_tree_main(model: &mut Vec<Entity>, tree: &mut EnumQuadTree<&mut Entity>)
 
 fn enum_tree_no_cache_main(model: &mut Vec<Entity>) {
     
-    let mut tree = build_new_from_model_enum(model, 3);
+    let mut tree = EnumQuadTree::build_new_from_model(model, 128, 128, 3);
 
     //update the entities
     for entity in model.iter_mut() {

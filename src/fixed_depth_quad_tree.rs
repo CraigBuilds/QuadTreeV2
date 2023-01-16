@@ -1,10 +1,9 @@
 /// The QuadTree is a recursive data structure that divides a rectangle into 4 quadrants, each containing other quadrants, or a leaf
 /// The default depth is 3, which gives a 8x8 grid of leaves
-/// TODO use newtype pattern? Convert free functions into associated functions?
-pub type QuadTree<DataT> = QuadTreeDepth3<DataT>;
-
+pub struct QuadTree<DataT>(QuadTreeImpl<DataT>);
 /// 4 quadrants, each containing 4 quadrants, each containing 4 Leafs (8x8 grid, see README.md)
 type QuadTreeDepth3<DataT> = [[[QuadTreeLeaf<DataT>; 4]; 4]; 4];
+type QuadTreeImpl<DataT>=QuadTreeDepth3<DataT>;
 
 /// Leaf of the QuadTree
 pub struct QuadTreeLeaf<DataT> {
@@ -31,14 +30,6 @@ pub trait Quadrants{
     fn get_leaf_around(&self, x: u16, y: u16) -> Option<&QuadTreeLeaf<Self::DataT>>;
     /// Return a mutable reference to the leaf that contains the point
     fn get_mut_leaf_around(&mut self, x: u16, y: u16) -> Option<&mut QuadTreeLeaf<Self::DataT>>;
-    /// Convienience function for get_leaf_around that returns a reference to the vec of data
-    fn broad_phase(&self, x: u16, y: u16) -> &Vec<Self::DataT> {
-        &self.get_leaf_around(x, y).unwrap().data
-    }
-    /// Convienience function for get_mut_leaf_around that returns a mutable reference to the vec of data
-    fn broad_phase_mut(&mut self, x: u16, y: u16) -> &mut Vec<Self::DataT> {
-        &mut self.get_mut_leaf_around(x, y).unwrap().data
-    }
     // Used for debugging
     const DEPTH: usize;
 }
@@ -228,36 +219,58 @@ impl<DataT> QuadTreeLeaf<DataT> {
 use super::GetX;
 use super::GetY;
 
-pub fn rebuild_from_model<Entity: GetX+GetY>(tree: &mut QuadTree<&mut Entity>, model: &mut Vec<Entity>) {
-    tree.clear();
-    for i in 0..model.len() {
-        let entity = &mut model[i] as *mut Entity;
-        //// SAFETY: This is safe because the tree is cleared before being filled.
-        let entity = unsafe {&mut *entity};
-        //insert a reference to the entity into the tree
-        tree.insert(entity.get_x(), entity.get_y(), entity);
+impl<DataT> QuadTree<DataT> {
+    pub fn new_empty(rect_x: u16, rect_y: u16, rect_w: u16, rect_h: u16) -> Self {
+        Self(QuadTreeImpl::new_empty(rect_x, rect_y, rect_w, rect_h))
+    }
+    /// Convienience function for get_leaf_around that returns a reference to the vec of data
+    pub fn broad_phase(&self, x: u16, y: u16) -> &Vec<DataT> {
+        &self.0.get_leaf_around(x, y).unwrap().data
+    }
+    /// Convienience function for get_mut_leaf_around that returns a mutable reference to the vec of data
+    pub fn broad_phase_mut(&mut self, x: u16, y: u16) -> &mut Vec<DataT> {
+        &mut self.0.get_mut_leaf_around(x, y).unwrap().data
     }
 }
 
-pub fn build_new_from_model<'a, 'b, Entity: GetX+GetY>(model: &'a mut Vec<Entity>) -> QuadTree<&'b mut Entity> {
-    let mut tree = QuadTree::new_empty(0, 0, 1000, 1000);
-    for i in 0..model.len() {
-        let entity = &mut model[i] as *mut Entity;
-        //// SAFETY: This is safe because the tree is new before being filled.
-        let entity =  unsafe{&mut *entity};
-        //insert a reference to the entity into the tree
-        tree.insert(entity.get_x(), entity.get_y(), entity);
+impl<Entity: GetX+GetY> QuadTree<Entity> {
+
+    pub fn rebuild_from_model(tree: &mut QuadTree<&mut Entity>, model: &mut Vec<Entity>) {
+        tree.0.clear();
+        for i in 0..model.len() {
+            let entity = &mut model[i] as *mut Entity;
+            //// SAFETY: This is safe because the tree is cleared before being filled.
+            let entity = unsafe {&mut *entity};
+            //insert a reference to the entity into the tree
+            tree.0.insert(entity.get_x(), entity.get_y(), entity);
+        }
     }
-    tree
+
+    pub fn build_new_from_model<'a, 'b>(model: &'a mut Vec<Entity>, width: u16, height: u16) -> QuadTree<&'b mut Entity> {
+        let mut tree = QuadTree::new_empty(0, 0, width, height);
+        for i in 0..model.len() {
+            let entity = &mut model[i] as *mut Entity;
+            //// SAFETY: This is safe because the tree is new before being filled.
+            let entity =  unsafe{&mut *entity};
+            //insert a reference to the entity into the tree
+            tree.0.insert(entity.get_x(), entity.get_y(), entity);
+        }
+        tree
+    }
+
+
 }
 
-/// A version that returns a QuadTree that owns clones of the entities
-pub fn build_owned_from_model<Entity: GetX+GetY+Clone>(model: &mut Vec<Entity>) -> QuadTree<Entity> {
-    let mut tree = QuadTree::new_empty(0, 0, 1000, 1000);
-    for i in 0..model.len() {
-        let entity = model[i].clone();
-        //insert a reference to the entity into the tree
-        tree.insert(entity.get_x(), entity.get_y(), entity);
+impl<Entity: GetX+GetY+Clone> QuadTree<Entity> {
+
+    /// A version that returns a QuadTree that owns clones of the entities
+    pub fn build_owned_from_model(model: &mut Vec<Entity>) -> QuadTree<Entity> {
+        let mut tree = QuadTree::new_empty(0, 0, 1000, 1000);
+        for i in 0..model.len() {
+            let entity = model[i].clone();
+            //insert a reference to the entity into the tree
+            tree.0.insert(entity.get_x(), entity.get_y(), entity);
+        }
+        tree
     }
-    tree
 }
