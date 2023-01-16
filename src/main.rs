@@ -1,6 +1,5 @@
 mod quad_tree;
 use quad_tree::*;
-use core::slice::*;
 
 #[derive(Debug)]
 pub struct Entity {
@@ -34,13 +33,13 @@ fn main() {
         }
 
         for entity in model.iter_mut() {
-            let local_model = &tree.get_leaf_around(entity.x, entity.y).unwrap().data;
+            let local_model = &mut tree.get_mut_leaf_around(entity.x, entity.y).unwrap().data;
             update_entity(entity, local_model);
         }
     }
 }
 
-fn update_entity<'a>(entity: &mut Entity, local_model: &Vec<&'a mut Entity>) {
+fn update_entity<'a>(entity: &mut Entity, local_model: &mut Vec<&'a mut Entity>) {
     for other_entity in local_model {
         if is_coliding(entity, other_entity) {
             entity.collision = true;

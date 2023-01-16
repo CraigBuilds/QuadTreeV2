@@ -1,3 +1,4 @@
+///Split a rect into 4 quadrants. This is a utility function used by the QuadTree constructor
 fn divide_into_4(rect_x: u16, rect_y: u16, rect_w: u16, rect_h: u16) -> [(u16, u16, u16, u16); 4] {
     let half_w = rect_w / 2;
     let half_h = rect_h / 2;
@@ -12,13 +13,13 @@ fn divide_into_4(rect_x: u16, rect_y: u16, rect_w: u16, rect_h: u16) -> [(u16, u
 /// 4 quadrants, each containing 4 quadrants, each containing 4 Leafs (8x8 grid, see README.md)
 pub type QuadTree<DataT> = [[[QuadTreeLeaf<DataT>; 4]; 4]; 4];
 
-/// 4 quadrants, each containing 4 quadrants, each containing 4 quadrants, each containing 4 Leafs (16x16 grid)
-//pub type DeepQuadTree = [[[[QuadTreeLeaf; 4]; 4]; 4]; 4];
-
 /// Leaf of the QuadTree
 pub struct QuadTreeLeaf<DataT> {
+    //Bucket of data within the tree. This is intended to contain references to entities owned by the game model.
     pub data: Vec<DataT>,
+    //For simplicity the, positions of the data elements are stored separately from the data.
     positions: Vec<(u16, u16)>,
+    //The bounding box of the leaf
     rect_x: u16, rect_y: u16, rect_w: u16, rect_h: u16,
 }
 
@@ -35,6 +36,8 @@ pub trait Quadrants{
     fn insert(&mut self, x: u16, y: u16, data: Self::DataT) -> bool;
     /// Return a reference to the leaf that contains the point
     fn get_leaf_around(&self, x: u16, y: u16) -> Option<&QuadTreeLeaf<Self::DataT>>;
+    /// Return a mutable reference to the leaf that contains the point
+    fn get_mut_leaf_around(&mut self, x: u16, y: u16) -> Option<&mut QuadTreeLeaf<Self::DataT>>;
     //used for debugging
     const DEPTH: usize;
 }
@@ -97,6 +100,18 @@ impl<InnerQuadrants> Quadrants for [InnerQuadrants; 4] where InnerQuadrants: Qua
         }
         None
     }
+    /// Return a mutable reference to the leaf that contains the point
+    fn get_mut_leaf_around(&mut self, x: u16, y: u16) -> Option<&mut QuadTreeLeaf<Self::DataT>> {
+        for quadrant_or_leaf in self.iter_mut() {
+            //this will recurse down the tree until it finds a leaf
+            //short circuit if we find a leaf that could contain the point
+            if let Some(vec) = quadrant_or_leaf.get_mut_leaf_around(x, y) {
+                return Some(vec);
+            }
+        }
+        None
+    }
+
     const DEPTH: usize = InnerQuadrants::DEPTH + 1;
 }
 
@@ -155,6 +170,16 @@ impl<DataT> Quadrants for [QuadTreeLeaf<DataT>; 4] {
             //short circuit if we find a leaf that could contain the point
             if leaf.can_insert(x, y) {
                 return Some(&leaf);
+            }
+        }
+        None
+    }
+    /// Return a mutable reference to the leaf that contains the point
+    fn get_mut_leaf_around(&mut self, x: u16, y: u16) -> Option<&mut QuadTreeLeaf<Self::DataT>> {
+        for leaf in self.iter_mut() {
+            //short circuit if we find a leaf that could contain the point
+            if leaf.can_insert(x, y) {
+                return Some(leaf);
             }
         }
         None
